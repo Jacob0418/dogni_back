@@ -6,12 +6,21 @@ export interface Foundation {
     _id?: string;
     name: string;
     description: string;
-    address: string;
+    address: Address;
     phone: string;
     email: string;
     logoUrl?: string;
+    posterUrl?: string;
     createdAt?: Date;
     updatedAt?: Date;
+}
+
+export interface Address {
+    country: string;
+    state: string;
+    city: string;
+    street?: string;
+    zipCode: string;
 }
 
 type FoundationDB = Omit<Foundation, "_id"> & { _id?: ObjectId };
