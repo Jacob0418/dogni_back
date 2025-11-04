@@ -2,6 +2,7 @@ import express from "express";
 import foundationRouters from "./foundations/foundation.routes";
 import userRouters from "./users/user.routes";
 import stripeRouters from "./stripe/stripe.routes";
+import aiRouters from './ai/ai.routes'
 
 const router = express.Router();
 
@@ -13,5 +14,7 @@ router.use("/users", userRouters);
 
 //STRIPE
 router.use("/stripe", stripeRouters);
+
+router.use('/ai', aiRouters);
 
 export { router };

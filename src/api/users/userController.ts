@@ -5,6 +5,7 @@ import { HttpStatusCode } from "../../shared/models/http.model";
 export async function createUserController(req: Request, res: Response, next: NextFunction) {
     try {
         const payload = req.body;
+        console.log("Payload received in controller:", payload);
         const insertedId = await service.createUserService(payload);
         return res.status(200).send({ status: HttpStatusCode.OK, message: "User created successfully", data: insertedId });
     } catch (err) {
