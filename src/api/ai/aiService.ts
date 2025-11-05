@@ -32,7 +32,7 @@ let styleImages: StyleImage[] = [];
  */
 function loadReferenceImages() {
   console.log('--- Cargando imágenes de referencia (Módulo AI) ---');
-  const referenceFiles = ['1001.jpg', 'image1.png', 'image2.png', 'image3.png', '1004.jpg', '1005.jpg'];
+  const referenceFiles = ['image4.png', 'image8.png', 'image9.png', 'image10.png'];
   const assetsDir = path.join(__dirname, 'image'); // Asumimos que /assets está en la raíz
 
   referenceFiles.forEach(filename => {
