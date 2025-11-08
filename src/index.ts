@@ -19,7 +19,12 @@ const errorHandler = new ErrorHandler(logger);
 // const errorFileHandler = new ErrorHandler(loggerFile);
 
 app.use(cors());
-app.use(bodyParser.json({ limit: '70mb' }));
+app.use(bodyParser.json({
+    limit: '70mb',
+    verify: (req, _res, buf) => {
+        (req as any).rawBody = buf;
+    }
+}));
 app.use(bodyParser.urlencoded({ limit: '70mb', extended: true }));
 app.use("/api", router);
 app.use(errorMiddleware);

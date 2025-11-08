@@ -246,6 +246,7 @@ export async function getDonationsByDonorUid(donorUid: string): Promise<Donation
         const database = await connect();
         const collection = database.collection<DonationDB>("donations");
         const donations = await collection.find({ donorUid }).toArray();
+        console.log("Donations found for donorUid:", donorUid);
         return donations.map((doc) => ({ ...doc, _id: doc._id?.toString() }));
     } catch (error) {
         throw new BaseError({ error, methodName: "getDonationsByDonorUid", log: "Error retrieving donations by donor UID" });
