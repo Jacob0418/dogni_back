@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon --exec \"npx ts-node\" src/index.ts",
-    "build": "tsc -p ."
+    "build": "tsc -p .",
+    "postbuild": "mkdir -p dist/api/ai/image && cp -R src/api/ai/image/* dist/api/ai/image || true"
   },
   "keywords": [],
   "author": "",

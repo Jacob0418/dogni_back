@@ -23,6 +23,20 @@ interface GeminiPart {
 }
 // ... (puedes añadir el resto de tipos de la respuesta anterior)
 
+function findAssetsDir(): string | null {
+  const candidates = [
+    path.join(__dirname, "image"),
+    path.join(process.cwd(), "src", "api", "ai", "image"),
+    path.join(process.cwd(), "dist", "api", "ai", "image"),
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      return c;
+    }
+  }
+  return null;
+}
+
 // --- Variable de módulo para "cachear" las imágenes ---
 let styleImages: StyleImage[] = [];
 
@@ -33,7 +47,17 @@ let styleImages: StyleImage[] = [];
 function loadReferenceImages() {
   console.log('--- Cargando imágenes de referencia (Módulo AI) ---');
   const referenceFiles = ['image4.png', 'image8.png', 'image9.png', 'image10.png'];
-  const assetsDir = path.join(__dirname, 'image'); // Asumimos que /assets está en la raíz
+
+  const assetsDir = findAssetsDir();
+  if (!assetsDir) {
+    console.error(`⚠️ [AI] No se encontró la carpeta de imágenes. Buscadas:\n - ${[
+      path.join(__dirname, "image"),
+      path.join(process.cwd(), "src", "api", "ai", "image"),
+      path.join(process.cwd(), "dist", "api", "ai", "image"),
+    ].join("\n - ")}`);
+    console.error('❌ [AI] Error Crítico: No se pudo cargar ninguna imagen de referencia.');
+    process.exit(1);
+  }
 
   referenceFiles.forEach(filename => {
     try {
@@ -43,7 +67,7 @@ function loadReferenceImages() {
         buffer,
         mimeType: filename.endsWith('.png') ? 'image/png' : 'image/jpeg',
       });
-      console.log(`✅ [AI] Imagen de referencia ${filename} cargada.`);
+      console.log(`✅ [AI] Imagen de referencia ${filename} cargada desde ${assetsDir}.`);
     } catch (error) {
       console.warn(`⚠️ [AI] Advertencia: No se pudo cargar ${filename} desde ${assetsDir}.`);
     }
@@ -51,7 +75,7 @@ function loadReferenceImages() {
 
   if (styleImages.length === 0) {
     console.error('❌ [AI] Error Crítico: No se pudo cargar ninguna imagen de referencia.');
-    process.exit(1); // Detiene el servidor si no hay imágenes
+    process.exit(1);
   }
   console.log(`📚 [AI] Total de imágenes cargadas: ${styleImages.length}`);
   console.log('--------------------------------------');
