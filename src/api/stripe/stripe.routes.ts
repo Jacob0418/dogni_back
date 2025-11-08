@@ -12,7 +12,6 @@ router.get("/payment-method/:id", controller.getPaymentMethodController);
 
 router.post(
     "/webhook",
-    express.raw({ type: "application/json" }),
     stripeWebhookController
 );
 

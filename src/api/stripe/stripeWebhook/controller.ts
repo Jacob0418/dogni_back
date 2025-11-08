@@ -41,12 +41,22 @@ export async function stripeWebhookController(
 
         await stripeService.handlePaymentIntentEvent(stripeData);
 
-        const paymentId = paymentIntentObj?.metadata?.paymentId || paymentIntentObj?.metadata?.donationId || null;
-        const amount = paymentIntentObj?.amount_received ? paymentIntentObj.amount_received / 100 : null;
+        const paymentId =
+            paymentIntentObj?.metadata?.paymentId ||
+            paymentIntentObj?.metadata?.donationId ||
+            null;
+        const amount = paymentIntentObj?.amount_received
+            ? paymentIntentObj.amount_received / 100
+            : null;
 
         if (paymentId && amount) {
             try {
-            console.log("Registrando/actualizando pago para id:", paymentId, "monto:", amount);
+            console.log(
+                "Registrando/actualizando pago para id:",
+                paymentId,
+                "monto:",
+                amount
+            );
             await stripeService.updatePayment(paymentId);
             } catch (err) {
             console.warn("Error actualizando registro de pago:", err);
