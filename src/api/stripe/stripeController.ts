@@ -63,3 +63,54 @@ export async function getPaymentMethodController(req: Request, res: Response, ne
         next(err);
     }
 }
+
+export async function getDonationsController(req: Request, res: Response, next: NextFunction) {
+    try {
+        const donations = await stripeService.getDonations();
+        return res.status(200).json({ success: true, donations });
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function getDonationByIdController(req: Request, res: Response, next: NextFunction) {
+    try {
+        const donationId = req.params.id;
+        if (!donationId) {
+            return res.status(400).json({ message: "donationId is required" });
+        }
+        const donation = await stripeService.getDonationById(donationId);
+        if (!donation) {
+            return res.status(404).json({ message: "Donation not found" });
+        }
+        return res.status(200).json(donation);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function getDonationsByFoundationIdController(req: Request, res: Response, next: NextFunction) {
+    try {
+        const foundationId = req.params.foundationId;
+        if (!foundationId) {
+            return res.status(400).json({ message: "foundationId is required" });
+        }
+        const donations = await stripeService.getDonationsByFoundationId(foundationId);
+        return res.status(200).json({ success: true, donations });
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function getDonationsByDonorUidController(req: Request, res: Response, next: NextFunction) {
+    try {
+        const donorUid = req.params.donorUid;
+        if (!donorUid) {
+            return res.status(400).json({ message: "donorUid is required" });
+        }
+        const donations = await stripeService.getDonationsByDonorUid(donorUid);
+        return res.status(200).json({ success: true, donations });
+    } catch (err) {
+        next(err);
+    }
+}

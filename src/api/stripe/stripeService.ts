@@ -1,4 +1,4 @@
-import { connect } from "../../shared/database/mongodb";
+import { connect, getMongoId } from "../../shared/database/mongodb";
 import { BaseError } from "../../shared/classes/base-error";
 import { ParametersError } from "../../shared/classes/api-errors";
 import { HttpStatusCode } from "../../shared/models/http.model";
@@ -16,6 +16,8 @@ export interface Donation {
     createdAt?: Date;
     updatedAt?: Date;
 }
+
+type DonationDB = Omit<Donation, "_id"> & { _id?: ObjectId };
 
 const stripeKey =
     process.env.NODE_ENV === "production"
@@ -182,5 +184,70 @@ export async function handlePaymentIntentEvent(event: any) {
         return true;
     } catch (error) {
         throw new BaseError({ error, methodName: "handlePaymentIntentEvent", log: "Error handling payment intent event" });
+    }
+}
+
+export async function updatePayment(paymentId: string) {
+    try {
+        const database = await connect();
+        const deRef = database.collection("payments");
+
+        const paymentStatus = {
+        status: "paid",
+        paymentDate: new Date().toISOString(),
+        };
+
+        await deRef.updateOne(
+        { _id: getMongoId(paymentId) },
+        { $set: { paymentStatus } }
+        );
+    } catch (error) {
+        throw new BaseError({ error: error, methodName: "updatePayment", log: "" });
+    }
+}
+
+export async function getDonations(): Promise<Donation[]> {
+    try {
+        const database = await connect();
+        const collection = database.collection<Donation>("donations");
+        const donations = await collection.find().toArray();
+        return donations.map((doc) => ({ ...doc, _id: doc._id?.toString() }));
+    } catch (error) {
+        throw new BaseError({ error, methodName: "getDonations", log: "Error retrieving donations" });
+    }
+}
+
+export async function getDonationById(donationId: string): Promise<Donation | null> {
+    try {
+        const database = await connect();
+        const collection = database.collection<DonationDB>("donations");
+        const doc = await collection.findOne({ _id: getMongoId(donationId) });
+        if (!doc) return null;
+        const donation: Donation = { ...doc, _id: doc._id?.toString() };
+        return donation;
+    } catch (error) {
+        throw new BaseError({ error, methodName: "getDonationById", log: "Error retrieving donation by ID" });
+    }
+}
+
+export async function getDonationsByFoundationId(foundationId: string): Promise<Donation[]> {
+    try {
+        const database = await connect();
+        const collection = database.collection<DonationDB>("donations");
+        const donations = await collection.find({ foundationId }).toArray();
+        return donations.map((doc) => ({ ...doc, _id: doc._id?.toString() }));
+    } catch (error) {
+        throw new BaseError({ error, methodName: "getDonationsByFoundationId", log: "Error retrieving donations by foundation ID" });
+    }
+}
+
+export async function getDonationsByDonorUid(donorUid: string): Promise<Donation[]> {
+    try {
+        const database = await connect();
+        const collection = database.collection<DonationDB>("donations");
+        const donations = await collection.find({ donorUid }).toArray();
+        return donations.map((doc) => ({ ...doc, _id: doc._id?.toString() }));
+    } catch (error) {
+        throw new BaseError({ error, methodName: "getDonationsByDonorUid", log: "Error retrieving donations by donor UID" });
     }
 }

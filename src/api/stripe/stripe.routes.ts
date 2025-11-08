@@ -16,4 +16,10 @@ router.post(
     stripeWebhookController
 );
 
+//DONATIONS ROUTES
+router.get("/donations", controller.getDonationsController);
+router.get("/donations/:id", controller.getDonationByIdController);
+router.get("/donations/foundation/:foundationId", controller.getDonationsByFoundationIdController);
+router.get("/donations/donor/:donorUid", controller.getDonationsByDonorUidController);
+
 export default router;
