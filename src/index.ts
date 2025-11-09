@@ -34,7 +34,7 @@ const swaggerOptions = {
             { url: swaggerServerUrl }
         ]
     },
-    apis: [path.join(__dirname, "api", "**", "*.ts")]
+    apis: [path.join(__dirname, "api", "**", "*.{ts,js}")]
 };
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
@@ -50,6 +50,9 @@ app.use("/api", router);
 app.use(errorMiddleware);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+app.get('/docs/swagger.json', (_req, res) => res.json(swaggerSpec));
+console.log('Swagger paths count:', Object.keys(swaggerSpec.paths || {}).length);
 
 app.listen(port, function () {
     console.log(`listening on http://localhost:${port}`);
