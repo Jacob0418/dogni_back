@@ -82,45 +82,106 @@ export async function awardCertificateIfFirstDonationFromTemplate(
     foundationId: string,
     paymentIntentId?: string,
     amount?: number
-    ) {
+): Promise<boolean> {
     try {
-        if (!donorUid || !foundationId) return false;
+        console.log("[certificates] awardCertificateIfFirstDonationFromTemplate start", { donorUid, foundationId, paymentIntentId, amount });
+
+        if (!donorUid || !foundationId) {
+            console.log("[certificates] missing donorUid or foundationId");
+            return false;
+        }
 
         const db = await connect();
         const donationsCol = db.collection("donations");
+        const usersCol = db.collection("users");
+        const certificatesCol = db.collection("certificate");
+        const foundationsCol = db.collection("foundations");
+
+        const donationDoc = await donationsCol.findOne({ paymentIntentId });
+        console.log("[certificates] donationDoc found:", !!donationDoc);
+
         const succeededCount = await donationsCol.countDocuments({
             donorUid,
             foundationId,
             status: "succeeded",
         });
-        if (succeededCount !== 1) return false;
-        const certificatesCol = db.collection("certificates");
-        const template = await certificatesCol.findOne({ foundationId });
 
-        if (!template) {
+        console.log("[certificates] succeededCount for donor/foundation:", succeededCount);
+
+        if (succeededCount !== 1) {
+            console.log("[certificates] Not first succeeded donation -> skipping");
             return false;
         }
-        const userCertEntry: any = {
-            certificateId: template._id,
-            title: template.title,
-            description: template.description,
+
+        let template = await certificatesCol.findOne({ foundationId: foundationId });
+        if (!template) {
+            try {
+                const maybeId = getMongoId(foundationId);
+                template = await certificatesCol.findOne({ foundationId: maybeId });
+            } catch (e) {
+                
+            }
+        }
+
+        if (!template) {
+            const foundationDoc = await foundationsCol.findOne({
+                _id: (() => { try { return getMongoId(foundationId); } catch { return foundationId; } })()
+            });
+            if (foundationDoc) {
+                template = {
+                title: `Primer donativo a ${foundationDoc.name}`,
+                description: `Gracias por tu primera donación a ${foundationDoc.name}.`,
+                } as any;
+                console.log("[certificates] No template found, using generated template from foundation:", foundationDoc.name);
+            } else {
+                console.log("[certificates] No certificate template found and foundation not found -> skipping");
+                return false;
+            }
+        }
+
+        const user = await usersCol.findOne({ uid: donorUid });
+        if (!user) {
+            console.log("[certificates] User with uid not found:", donorUid);
+            return false;
+        }
+
+        const issuedCertificatesCol = db.collection("issued_certificates");
+        const issuedDoc: any = {
+            certificateTemplateId: template._id ?? null,
+            donorUid,
             foundationId,
             paymentIntentId: paymentIntentId ?? null,
             amount: amount ?? null,
+            title: template.title,
+            description: template.description,
             awardedAt: new Date(),
+            issuedBy: "system",
         };
 
-        const usersCol = db.collection("users");
+        const insertRes = await issuedCertificatesCol.insertOne(issuedDoc);
+        console.log("[certificates] issued certificate inserted id:", insertRes.insertedId);
+
         await usersCol.updateOne(
             { uid: donorUid },
             {
-                $push: { certificates: userCertEntry },
+                $push: {
+                certificates: {
+                    _id: insertRes.insertedId,
+                    templateId: template._id ?? null,
+                    title: template.title,
+                    description: template.description,
+                    foundationId,
+                    awardedAt: issuedDoc.awardedAt,
+                },
+                },
                 $set: { updatedAt: new Date() },
             }
         );
 
+        console.log("[certificates] certificate reference added to user:", donorUid);
         return true;
     } catch (error) {
+        console.error("[certificates] awardCertificateIfFirstDonationFromTemplate error:", error);
         throw new BaseError({
             error,
             methodName: "awardCertificateIfFirstDonationFromTemplate",
