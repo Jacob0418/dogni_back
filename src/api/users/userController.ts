@@ -63,3 +63,16 @@ export async function deleteUserByIdController(req: Request, res: Response, next
         next(err);
     }
 }
+
+export async function getCertificateByUidController(req: Request, res: Response, next: NextFunction) {
+    try {
+        const uid = req.params.uid;
+        const certificate = await service.getCertificateByUidService(uid);
+        if (!certificate) {
+            return res.status(404).send({ status: HttpStatusCode.NOT_FOUND, message: "Certificate not found" });
+        }
+        return res.status(200).send({ status: HttpStatusCode.OK, message: "Certificate retrieved successfully", data: certificate });
+    } catch (err) {
+        next(err);
+    }
+}

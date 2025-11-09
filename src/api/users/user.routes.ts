@@ -124,4 +124,25 @@ router.delete("/uid/:uid", userController.deleteUserByUidController);
  */
 router.delete("/:id", userController.deleteUserByIdController);
 
+/**
+ * @openapi
+ * /users/certificate/{uid}:
+ *   get:
+ *     summary: Obtiene un certificado por UID
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: uid
+ *         schema:
+ *           type: string
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Certificado encontrado
+ *       404:
+ *         description: No encontrado
+ */
+router.get("/certificate/:uid", userController.getCertificateByUidController);
+
 export default router;

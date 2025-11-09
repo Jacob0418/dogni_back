@@ -59,3 +59,11 @@ export async function deleteUserByIdService(id: string): Promise<boolean> {
         throw new BaseError({ error: err, methodName: "deleteUserByIdService", log: "Error deleting user by id" });
     }
 }
+
+export async function getCertificateByUidService(uid: string): Promise<User | null> {
+    try {
+        return await model.getCertificateByUid(uid);
+    } catch (err) {
+        throw new BaseError({ error: err, methodName: "getCertificateByUidService", log: "Error getting certificate by uid" });
+    }
+}

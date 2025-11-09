@@ -160,3 +160,15 @@ export async function getAllUsers(): Promise<User[]> {
         throw new BaseError({ error, methodName: "getAllUsers", log: "Error getting all users" });
     }
 }
+
+export async function getCertificateByUid(uid: string): Promise<User | null> {
+    try {
+        const database = await connect();
+        const collection = database.collection<UserDB>("users");
+        const doc = await collection.findOne({ uid: uid });
+        if (!doc) return null;
+        return { ...doc, _id: doc._id?.toString() };
+    } catch (error) {
+        throw new BaseError({ error, methodName: "getUserByUid", log: "Error getting user by uid" });
+    }
+}
