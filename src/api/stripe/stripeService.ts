@@ -182,19 +182,19 @@ export async function handlePaymentIntentEvent(event: any) {
         { upsert: true }
         );
 
-        if (pi.status === "succeeded") {
-            const donorUid = pi.metadata?.donorUid ?? null;
-            const foundationId = pi.metadata?.foundationId ?? null;
-            const amount = (pi.amount_received && typeof pi.amount_received === "number") ? (pi.amount_received / 100) : undefined;
+        // if (pi.status === "succeeded") {
+        //     const donorUid = pi.metadata?.donorUid ?? null;
+        //     const foundationId = pi.metadata?.foundationId ?? null;
+        //     const amount = (pi.amount_received && typeof pi.amount_received === "number") ? (pi.amount_received / 100) : undefined;
 
-            if (donorUid && foundationId) {
-                try {
-                await awardCertificateIfFirstDonationFromTemplate(donorUid, foundationId, pi.id, amount);
-                } catch (err) {
-                console.warn("awardCertificateIfFirstDonationFromTemplate error:", err);
-                }
-            }
-        }
+        //     if (donorUid && foundationId) {
+        //         try {
+        //         await awardCertificateIfFirstDonationFromTemplate(donorUid, foundationId, pi.id, amount);
+        //         } catch (err) {
+        //         console.warn("awardCertificateIfFirstDonationFromTemplate error:", err);
+        //         }
+        //     }
+        // }
 
         return true;
     } catch (error) {

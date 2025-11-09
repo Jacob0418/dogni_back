@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import * as stripeService from "../stripeService";
+import { awardCertificateIfFirstDonationFromTemplate } from "../../certificates/certificateModel";
 
 const stripeKey =
     process.env.NODE_ENV === "production"
@@ -40,6 +41,27 @@ export async function stripeWebhookController(
         console.log("Payment successful...");
 
         await stripeService.handlePaymentIntentEvent(stripeData);
+
+        try {
+            const donorUid = paymentIntentObj?.metadata?.donorUid ?? null;
+            const foundationId = paymentIntentObj?.metadata?.foundationId ?? null;
+            const amount = paymentIntentObj?.amount_received ? paymentIntentObj.amount_received / 100 : null;
+
+            if (donorUid && foundationId) {
+                const awarded = await awardCertificateIfFirstDonationFromTemplate(
+                    donorUid,
+                    foundationId,
+                    paymentIntent,
+                    amount ?? undefined
+                );
+                console.log("Intentando otorgar certificado...");
+                console.log("awardCertificateIfFirstDonationFromTemplate returned:", awarded);
+            } else {
+                console.log("Metadata missing donorUid or foundationId — skipping certificate award.");
+            }
+        } catch (err) {
+            console.warn("Error awarding certificate:", err);
+        }
 
         const paymentId =
             paymentIntentObj?.metadata?.paymentId ||
