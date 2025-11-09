@@ -76,3 +76,55 @@ export async function getCertificateById(certificateId: string): Promise<Certifi
         throw new BaseError({ error: error, methodName: "getCertificateById", log: "Error getting certificate by ID" });
     }
 }
+
+export async function awardCertificateIfFirstDonationFromTemplate(
+    donorUid: string,
+    foundationId: string,
+    paymentIntentId?: string,
+    amount?: number
+    ) {
+    try {
+        if (!donorUid || !foundationId) return false;
+
+        const db = await connect();
+        const donationsCol = db.collection("donations");
+        const succeededCount = await donationsCol.countDocuments({
+            donorUid,
+            foundationId,
+            status: "succeeded",
+        });
+        if (succeededCount !== 1) return false;
+        const certificatesCol = db.collection("certificates");
+        const template = await certificatesCol.findOne({ foundationId });
+
+        if (!template) {
+            return false;
+        }
+        const userCertEntry: any = {
+            certificateId: template._id,
+            title: template.title,
+            description: template.description,
+            foundationId,
+            paymentIntentId: paymentIntentId ?? null,
+            amount: amount ?? null,
+            awardedAt: new Date(),
+        };
+
+        const usersCol = db.collection("users");
+        await usersCol.updateOne(
+            { uid: donorUid },
+            {
+                $push: { certificates: userCertEntry },
+                $set: { updatedAt: new Date() },
+            }
+        );
+
+        return true;
+    } catch (error) {
+        throw new BaseError({
+            error,
+            methodName: "awardCertificateIfFirstDonationFromTemplate",
+            log: "Error awarding certificate from template",
+        });
+    }
+}

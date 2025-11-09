@@ -1,7 +1,7 @@
 import express, { NextFunction } from "express";
 import { HttpStatusCode } from "../../shared/models/http.model";
 import * as certificateService from "./certificateService";
-import { Certificate } from "./certicateModel";
+import { Certificate } from "./certificateModel";
 import { ParametersError } from "../../shared/classes/api-errors";
 
 export async function createCertificateController(

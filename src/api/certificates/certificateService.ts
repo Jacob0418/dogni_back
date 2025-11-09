@@ -1,7 +1,7 @@
 import { BaseError } from "../../shared/classes/base-error";
 import { ParametersError } from "../../shared/classes/api-errors";
 import { HttpStatusCode } from "../../shared/models/http.model";
-import { createCertificate, getCertificates, updateCertificate, deleteCertificate, Certificate, getCertificateById } from "./certicateModel";
+import { createCertificate, getCertificates, updateCertificate, deleteCertificate, Certificate, getCertificateById } from "./certificateModel";
 
 export async function serviceCreateCertificate(certificateData: Certificate): Promise<string> {
     try {

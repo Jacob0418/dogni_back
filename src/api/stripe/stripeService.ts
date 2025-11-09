@@ -3,6 +3,7 @@ import { BaseError } from "../../shared/classes/base-error";
 import { ParametersError } from "../../shared/classes/api-errors";
 import { HttpStatusCode } from "../../shared/models/http.model";
 import { ObjectId } from "mongodb";
+import { awardCertificateIfFirstDonationFromTemplate } from "../certificates/certificateModel";
 
 export interface Donation {
     _id?: string;
@@ -180,6 +181,20 @@ export async function handlePaymentIntentEvent(event: any) {
         },
         { upsert: true }
         );
+
+        if (pi.status === "succeeded") {
+            const donorUid = pi.metadata?.donorUid ?? null;
+            const foundationId = pi.metadata?.foundationId ?? null;
+            const amount = (pi.amount_received && typeof pi.amount_received === "number") ? (pi.amount_received / 100) : undefined;
+
+            if (donorUid && foundationId) {
+                try {
+                await awardCertificateIfFirstDonationFromTemplate(donorUid, foundationId, pi.id, amount);
+                } catch (err) {
+                console.warn("awardCertificateIfFirstDonationFromTemplate error:", err);
+                }
+            }
+        }
 
         return true;
     } catch (error) {
