@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import * as stripeService from "./stripeService";
+import { HttpStatusCode } from "../../shared/models/http.model";
 
 export async function createDonationIntentController(req: Request, res: Response, next: NextFunction) {
     try {
@@ -67,7 +68,7 @@ export async function getPaymentMethodController(req: Request, res: Response, ne
 export async function getDonationsController(req: Request, res: Response, next: NextFunction) {
     try {
         const donations = await stripeService.getDonations();
-        return res.status(200).json({ success: true, donations });
+        return res.status(200).send({ success: HttpStatusCode.OK, message: "Donations retrieved successfully", data: donations });
     } catch (err) {
         next(err);
     }
@@ -77,13 +78,13 @@ export async function getDonationByIdController(req: Request, res: Response, nex
     try {
         const donationId = req.params.id;
         if (!donationId) {
-            return res.status(400).json({ message: "donationId is required" });
+            return res.status(400).send({ success: HttpStatusCode.BAD_REQUEST, message: "donationId is required" });
         }
         const donation = await stripeService.getDonationById(donationId);
         if (!donation) {
-            return res.status(404).json({ message: "Donation not found" });
+            return res.status(404).send({ success: HttpStatusCode.NOT_FOUND, message: "Donation not found" });
         }
-        return res.status(200).json(donation);
+        return res.status(200).send({ success: HttpStatusCode.OK, message: "Donation retrieved successfully", data: donation });
     } catch (err) {
         next(err);
     }
@@ -93,10 +94,10 @@ export async function getDonationsByFoundationIdController(req: Request, res: Re
     try {
         const foundationId = req.params.foundationId;
         if (!foundationId) {
-            return res.status(400).json({ message: "foundationId is required" });
+            return res.status(400).send({ success: HttpStatusCode.BAD_REQUEST, message: "foundationId is required" });
         }
         const donations = await stripeService.getDonationsByFoundationId(foundationId);
-        return res.status(200).json({ success: true, donations });
+        return res.status(200).send({ success: HttpStatusCode.OK, message: "Donations retrieved successfully", data: donations });
     } catch (err) {
         next(err);
     }
@@ -106,10 +107,10 @@ export async function getDonationsByDonorUidController(req: Request, res: Respon
     try {
         const donorUid = req.params.donorUid;
         if (!donorUid) {
-            return res.status(400).json({ message: "donorUid is required" });
+            return res.status(400).send({ success: HttpStatusCode.BAD_REQUEST, message: "donorUid is required" });
         }
         const donations = await stripeService.getDonationsByDonorUid(donorUid);
-        return res.status(200).json({ success: true, donations });
+        return res.status(200).send({ success: HttpStatusCode.OK, message: "Donations retrieved successfully", data: donations });
     } catch (err) {
         next(err);
     }
