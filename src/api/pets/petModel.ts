@@ -16,20 +16,17 @@ export async function createPet(pet: Pet): Promise<Pet> {
     try {
         const database = await connect();
         const collection = database.collection("pets");
-        const { id, ...rest } = pet;
-        const petData: any = {
-            ...rest,
-            ownerId: getMongoId(rest.ownerId)
-        };
+        // const { id, ...rest } = pet;
+        // const petData: any = {
+        //     ...rest,
+        //     ownerId: getMongoId(rest.ownerId)
+        // };
 
-        if (id) {
-            petData._id = getMongoId(id);
-        }
-        const result = await collection.insertOne(petData);
-        return {
-            ...pet,
-            id: result.insertedId.toHexString()
-        };
+        // if (id) {
+        //     petData._id = getMongoId(id);
+        // }
+        const result = await collection.insertOne(pet);
+        return result.insertedId.toHexString() as unknown as Pet;
     } catch (error) {
         throw new BaseError({ error, methodName: "createPet", log: "Error creating pet" });
     }
