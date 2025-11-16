@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import * as stripeService from "../stripeService";
 import { awardCertificateIfFirstDonationFromTemplate } from "../../certificates/certificateModel";
+import { connect, getMongoId } from "../../../shared/database/mongodb";
+import { sendDonationSuccessNotification } from "../../../shared/notifications/fcm";
 
 const stripeKey =
     process.env.NODE_ENV === "production"
@@ -63,26 +65,56 @@ export async function stripeWebhookController(
             console.warn("Error awarding certificate:", err);
         }
 
-        const paymentId =
+        try {
+            const paymentId =
             paymentIntentObj?.metadata?.paymentId ||
             paymentIntentObj?.metadata?.donationId ||
             null;
-        const amount = paymentIntentObj?.amount_received
+            const amount = paymentIntentObj?.amount_received
             ? paymentIntentObj.amount_received / 100
             : null;
 
-        if (paymentId && amount) {
-            try {
-            console.log(
-                "Registrando/actualizando pago para id:",
-                paymentId,
-                "monto:",
-                amount
-            );
+            if (paymentId && amount) {
+            console.log("Registrando/actualizando pago para id:", paymentId, "monto:", amount);
             await stripeService.updatePayment(paymentId);
-            } catch (err) {
-            console.warn("Error actualizando registro de pago:", err);
             }
+        } catch (err) {
+            console.warn("Error actualizando registro de pago:", err);
+        }
+
+        try {
+            const donorUid = paymentIntentObj?.metadata?.donorUid ?? null;
+            const foundationId = paymentIntentObj?.metadata?.foundationId ?? null;
+            const amountNum = paymentIntentObj?.amount_received ? paymentIntentObj.amount_received / 100 : null;
+
+            if (donorUid) {
+            let foundationName = foundationId ?? "la fundación";
+            try {
+                const db = await connect();
+                const foundationsCol = db.collection("foundations");
+                const maybeId = (() => { try { return getMongoId(foundationId); } catch { return foundationId; } })();
+                const fdoc = await foundationsCol.findOne({ _id: maybeId }) || await foundationsCol.findOne({ _id: foundationId }) || await foundationsCol.findOne({ id: foundationId });
+                if (fdoc && fdoc.name) foundationName = fdoc.name;
+            } catch (e) {
+                // ignore
+            }
+
+            await sendDonationSuccessNotification(
+                donorUid,
+                "Donación completada",
+                `Tu donación de ${amountNum ?? ""} MXN a ${foundationName} fue exitosa. ¡Gracias!`,
+                {
+                type: "donation_succeeded",
+                paymentIntentId: paymentIntent ?? "",
+                foundationId: foundationId ?? ""
+                }
+            );
+            console.log("Notificación FCM enviada a:", donorUid);
+            } else {
+            console.log("No donorUid en metadata — no se envía notificación FCM.");
+            }
+        } catch (err) {
+            console.warn("Error sending FCM notification:", err);
         }
 
         console.log("Envío de notificaciones post-pago (si aplica)");

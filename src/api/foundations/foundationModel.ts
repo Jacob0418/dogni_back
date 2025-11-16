@@ -21,6 +21,8 @@ export interface Address {
     city: string;
     street?: string;
     zipCode: string;
+    lat?: number;
+    lng?: number;
 }
 
 type FoundationDB = Omit<Foundation, "_id"> & { _id?: ObjectId };

@@ -187,4 +187,28 @@ router.get("/donations/foundation/:foundationId", controller.getDonationsByFound
  */
 router.get("/donations/donor/:donorUid", controller.getDonationsByDonorUidController);
 
+/**
+ * @openapi
+ * /stripe/fcm-token:
+ *   post:
+ *     summary: Registra un token FCM para un usuario
+ *     tags:
+ *       - Stripe
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               uid:
+ *                 type: string
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token registrado exitosamente
+ */
+router.post("/fcm-token", controller.registerFcmTokenController);
+
 export default router;

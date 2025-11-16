@@ -16,13 +16,49 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - address
+ *               - phone
+ *               - email
  *             properties:
  *               name:
  *                 type: string
  *               description:
  *                 type: string
- *               address:
+ *               phone:
  *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               logoUrl:
+ *                 type: string
+ *                 format: uri
+ *               posterUrl:
+ *                 type: string
+ *                 format: uri
+ *               address:
+ *                 type: object
+ *                 required:
+ *                   - country
+ *                   - state
+ *                   - city
+ *                   - zipCode
+ *                 properties:
+ *                   country:
+ *                     type: string
+ *                   state:
+ *                     type: string
+ *                   city:
+ *                     type: string
+ *                   street:
+ *                     type: string
+ *                   zipCode:
+ *                     type: string
+ *                   lat:
+ *                     type: number
+ *                   lng:
+ *                     type: number
  *     responses:
  *       201:
  *         description: Fundación creada
@@ -77,12 +113,46 @@ router.get('/:id', foundationController.getFoundationByIdController);
  *         schema:
  *           type: string
  *         required: true
+ *         description: ID de la fundación
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               logoUrl:
+ *                 type: string
+ *                 format: uri
+ *               posterUrl:
+ *                 type: string
+ *                 format: uri
+ *               address:
+ *                 type: object
+ *                 properties:
+ *                   country:
+ *                     type: string
+ *                   state:
+ *                     type: string
+ *                   city:
+ *                     type: string
+ *                   street:
+ *                     type: string
+ *                   zipCode:
+ *                     type: string
+ *                   lat:
+ *                     type: number
+ *                   lng:
+ *                     type: number
  *     responses:
  *       200:
  *         description: Fundación actualizada

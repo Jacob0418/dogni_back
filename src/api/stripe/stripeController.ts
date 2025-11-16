@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import * as stripeService from "./stripeService";
 import { HttpStatusCode } from "../../shared/models/http.model";
+import { connect } from "../../shared/database/mongodb";
 
 export async function createDonationIntentController(req: Request, res: Response, next: NextFunction) {
     try {
@@ -113,5 +114,17 @@ export async function getDonationsByDonorUidController(req: Request, res: Respon
         return res.status(200).send({ success: HttpStatusCode.OK, message: "Donations retrieved successfully", data: donations });
     } catch (err) {
         next(err);
+    }
+}
+
+export async function registerFcmTokenController(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { uid, token } = req.body;
+        if (!uid || !token) return res.status(400).send("Missing uid or token");
+        const db = await connect();
+        await db.collection("users").updateOne({ uid }, { $addToSet: { fcmTokens: token }, $set: { updatedAt: new Date() } }, { upsert: false });
+        return res.status(200).send({ success: HttpStatusCode.OK, message: "Token registered successfully" });
+    } catch (error) {
+        next(error);
     }
 }
