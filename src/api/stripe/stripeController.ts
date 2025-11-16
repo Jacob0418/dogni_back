@@ -120,6 +120,7 @@ export async function getDonationsByDonorUidController(req: Request, res: Respon
 export async function registerFcmTokenController(req: Request, res: Response, next: NextFunction) {
     try {
         const { uid, token } = req.body;
+        console.log("Registering FCM token for uid:", uid, "with token:", token);
         if (!uid || !token) return res.status(400).send("Missing uid or token");
         const db = await connect();
         await db.collection("users").updateOne({ uid }, { $addToSet: { fcmTokens: token }, $set: { updatedAt: new Date() } }, { upsert: false });
