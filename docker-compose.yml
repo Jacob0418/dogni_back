@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    image: dogni_back:local
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/firebase-key.json
+      - CONNECTION_STRING=${CONNECTION_STRING:-mongodb://mongo:27017/dogni}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./dogni-2efdb-firebase-adminsdk-fbsvc-581aa22119.json:/run/secrets/firebase-key.json:ro
+    restart: unless-stopped
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+volumes:
+  mongo-data:
