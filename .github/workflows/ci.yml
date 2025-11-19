@@ -74,15 +74,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Build and push image (lowercase tag)
+        env:
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+          TAG="ghcr.io/${REPO_OWNER}/${REPO_NAME}"
+          TAG_LC=$(echo "$TAG" | tr '[:upper:]' '[:lower:]')
+          echo "Building and pushing $TAG_LC:latest"
+          docker buildx build --platform linux/amd64,linux/arm64 --push --tag "$TAG_LC:latest" --file ./Dockerfile .
 
   deploy-to-k8s:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
