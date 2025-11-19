@@ -1,0 +1,103 @@
+name: CI
+
+on:
+    push:
+        branches: [ main, kubctl ]
+    pull_request:
+        branches: [ main, kubctl ]
+
+permissions:
+    contents: read
+    packages: write
+    id-token: write
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+        continue-on-error: false
+
+      - name: Run tests
+        run: npm test --silent
+        continue-on-error: false
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+  docker-build-push:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-to-k8s:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    needs: docker-build-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubeconfig
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+
+      - name: Update image in k8s manifests and apply
+        run: |
+          IMAGE="ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest"
+          # Reemplaza en tus manifests o usa kustomize/helm; ejemplo simple:
+          kubectl set image deployment/dogni-back dogni-back=$IMAGE --namespace default || true
+          kubectl apply -f k8s/ --namespace default
+
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/dogni-back --namespace default --timeout=2m
