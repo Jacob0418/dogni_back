@@ -2,8 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dogni-back
-  labels:
-    app: dogni-back
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -14,16 +13,15 @@ spec:
       labels:
         app: dogni-back
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: dogni-back
-          image: ghcr.io/TU_USUARIO/TU_REPO:latest
-          imagePullPolicy: Always
+          image: ghcr.io/jacob0418/dogni_back:latest
           ports:
             - containerPort: 3000
           env:
-            - name: NODE_ENV
-              value: production
-            - name: MONGO_URL
+            - name: CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
                   name: dogni-secrets
