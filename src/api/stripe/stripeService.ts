@@ -20,10 +20,13 @@ export interface Donation {
 
 type DonationDB = Omit<Donation, "_id"> & { _id?: ObjectId };
 
-const stripeKey =
-    process.env.NODE_ENV === "production"
-        ? process.env.STRIPE_PROD_SECRET_KEY
-        : process.env.STRIPE_TEST_SECRET_KEY;
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+
+
+// const stripeKey =
+//     process.env.NODE_ENV === "production"
+//         ? process.env.STRIPE_PROD_SECRET_KEY
+//         : process.env.STRIPE_TEST_SECRET_KEY;
 
 if (!stripeKey) {
     throw new Error("Stripe secret key is not defined in environment variables");

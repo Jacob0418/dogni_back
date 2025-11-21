@@ -67,6 +67,9 @@ app.listen(port, function () {
 //     next(new AuthenticationError("as"))
 // }
 
+console.log('STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY);
+console.log('CONNECTION_STRING:', process.env.CONNECTION_STRING);
+
 async function errorMiddleware(err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) {
     if (err instanceof BaseError) {
         console.error('Error occurred:', err);

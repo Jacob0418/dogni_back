@@ -104,7 +104,7 @@ jobs:
 
       - name: Update image in k8s manifests and apply
         run: |
-          IMAGE="ghcr.io/${{ github.repository_owner }}/${{ github.repository }}:latest"
+          IMAGE="ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest"
           # Reemplaza en tus manifests o usa kustomize/helm; ejemplo simple:
           kubectl set image deployment/dogni-back dogni-back=$IMAGE --namespace default || true
           kubectl apply -f k8s/ --namespace default

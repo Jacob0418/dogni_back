@@ -13,8 +13,6 @@ spec:
       labels:
         app: dogni-back
     spec:
-      imagePullSecrets:
-        - name: ghcr-secret
       containers:
         - name: dogni-back
           image: ghcr.io/jacob0418/dogni_back:latest
@@ -26,3 +24,20 @@ spec:
                 secretKeyRef:
                   name: dogni-secrets
                   key: mongo_url
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: dogni-secrets
+                  key: stripe_secret_key
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /secrets/firebase/dogni-2efdb-firebase-adminsdk-fbsvc-581aa22119.json
+            - name: STORAGE_BUCKET
+              value: dogni-2efdb.appspot.com
+          volumeMounts:
+            - name: firebase-admin-secret
+              mountPath: /secrets/firebase
+              readOnly: true
+      volumes:
+        - name: firebase-admin-secret
+          secret:
+            secretName: firebase-admin-secret
