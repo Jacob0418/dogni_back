@@ -13,7 +13,7 @@ export interface AIimage {
 
 type AIimageDB = Omit<AIimage, "_id"> & { _id?: ObjectId };
 
-const MAX_IMAGES_PER_DAY = 2;
+const MAX_IMAGES_PER_DAY = 5;
 
 function hasPassed24Hours(resetDate: Date): boolean {
     const now = new Date();

@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Buffer } from 'buffer';
 import 'multer';
+import { GoogleGenAI } from '@google/genai';
 import { ParametersError } from '../../shared/classes/api-errors';
 import { BaseError } from '../../shared/classes/base-error';
 import { canUserGenerateImage, recordImageGeneration } from './aiModel';
@@ -11,14 +12,6 @@ interface StyleImage {
   filename: string;
   buffer: Buffer;
   mimeType: string;
-}
-
-interface GeminiPart {
-  text?: string;
-  inlineData?: {
-    mimeType: string;
-    data: string;
-  };
 }
 
 function findAssetsDir(): string | null {
@@ -77,7 +70,7 @@ export async function servicePixelateImage(userImage: Express.Multer.File | unde
     
     if (!canGenerate) {
       throw new BaseError({ 
-        log: 'Has alcanzado el límite de 2 imágenes por día. Intenta nuevamente en unas horas.', 
+        log: 'Has alcanzado el límite de imágenes por día. Intenta nuevamente en unas horas.', 
         methodName: 'servicePixelateImage',
         httpCode: HttpStatusCode.CONFLICT
       });
@@ -90,15 +83,18 @@ export async function servicePixelateImage(userImage: Express.Multer.File | unde
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      console.error(' La API Key de Gemini no está configurada.');
+      console.error('La API Key de Gemini no está configurada.');
       throw new BaseError({ 
         log: 'La API Key de Gemini no está configurada.', 
         methodName: 'servicePixelateImage' 
       });
     }
 
-    // 2. Construir Payload
-    const parts: GeminiPart[] = [
+    // Inicializar SDK de Google GenAI
+    const ai = new GoogleGenAI({ apiKey });
+
+    // Construir las partes del mensaje
+    const parts = [
       { text: AI_PROMPT },
       {
         inlineData: {
@@ -114,44 +110,41 @@ export async function servicePixelateImage(userImage: Express.Multer.File | unde
       })),
     ];
 
-    const payload = {
-      contents: [{ parts }],
-      generationConfig: {
-        responseModalities: ['IMAGE'],
-        temperature: 0.2,
-        topK: 20,
-        topP: 0.8,
-      },
+    const config = {
+      responseModalities: ['IMAGE'],
+      temperature: 0.2,
+      topK: 20,
+      topP: 0.8,
     };
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
+    const contents = [
+      {
+        role: 'user',
+        parts,
+      },
+    ];
 
-    const apiResponse = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      config,
+      contents,
     });
 
-    if (!apiResponse.ok) {
-      const errorBody = await apiResponse.text();
-      console.error('Error en la respuesta de la API de Gemini:', apiResponse.status);
-      throw new BaseError({
-          log: `Error de la API de Gemini: ${errorBody}`,
-          methodName: 'servicePixelateImage',
-          httpCode: apiResponse.status
-      });
-    }
-
-    const result: any = await apiResponse.json();
-    const base64Data = result?.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData)?.inlineData?.data;
+    const base64Data = response.candidates?.[0]?.content?.parts?.find((p: any) => p.inlineData)?.inlineData?.data;
 
     if (!base64Data) {
       console.error('La API de Gemini no devolvió datos de imagen.');
-      const textPart = result?.candidates?.[0]?.content?.parts?.find((p: any) => p.text);
+      const textPart = response.candidates?.[0]?.content?.parts?.find((p: any) => p.text);
       if (textPart) {
-          throw new BaseError({ log: `La API devolvió texto en lugar de imagen: ${textPart.text}`, methodName: 'servicePixelateImage' });
+        throw new BaseError({ 
+          log: `La API devolvió texto en lugar de imagen: ${textPart.text}`, 
+          methodName: 'servicePixelateImage' 
+        });
       }
-      throw new BaseError({ log: 'La respuesta de la API no contenía una imagen.', methodName: 'servicePixelateImage' });
+      throw new BaseError({ 
+        log: 'La respuesta de la API no contenía una imagen.', 
+        methodName: 'servicePixelateImage' 
+      });
     }
 
     console.log('Imagen procesada con éxito.');
@@ -168,8 +161,12 @@ export async function servicePixelateImage(userImage: Express.Multer.File | unde
 
   } catch (error) {
     if (!(error instanceof BaseError) && !(error instanceof ParametersError)) {
-        console.error('Error procesando la imagen:', error);
-        throw new BaseError({ error: error, methodName: "servicePixelateImage", log: "Error procesando la imagen" });
+      console.error('Error procesando la imagen:', error);
+      throw new BaseError({ 
+        error: error, 
+        methodName: "servicePixelateImage", 
+        log: "Error procesando la imagen" 
+      });
     }
     throw error;
   }
