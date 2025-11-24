@@ -4,7 +4,6 @@ import * as aiController from './aiController';
 
 const router = express.Router();
 
-// Configuración de Multer (en memoria)
 const storage = multer.memoryStorage();
 const upload = multer({ 
   storage: storage,

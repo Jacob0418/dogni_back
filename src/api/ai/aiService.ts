@@ -90,10 +90,8 @@ export async function servicePixelateImage(userImage: Express.Multer.File | unde
       });
     }
 
-    // Inicializar SDK de Google GenAI
     const ai = new GoogleGenAI({ apiKey });
 
-    // Construir las partes del mensaje
     const parts = [
       { text: AI_PROMPT },
       {
