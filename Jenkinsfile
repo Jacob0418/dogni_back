@@ -1,15 +1,15 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs "NodeJS_18"
+    }
+
     environment {
         REGISTRY = "ghcr.io"
         REPO_OWNER = "jacob0418"
         REPO_NAME = "dogni_back"
         IMAGE = "ghcr.io/${REPO_OWNER}/${REPO_NAME}:latest"
-
-        // Credenciales en Jenkins:
-        // - GITHUB_TOKEN
-        // - KUBE_CONFIG  → kubeconfig del cluster
     }
 
     stages {
