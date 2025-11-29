@@ -20,16 +20,9 @@ pipeline {
             }
         }
 
-        stage('Node.js Setup') {
-            steps {
-                sh 'curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -'
-                sh 'sudo apt-get install -y nodejs'
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
-                sh 'npm ci'
+                sh 'npm install'
             }
         }
 
