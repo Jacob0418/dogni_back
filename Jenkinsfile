@@ -8,7 +8,7 @@ pipeline {
         IMAGE = "ghcr.io/${REPO_OWNER}/${REPO_NAME}:latest"
 
         // Credenciales en Jenkins:
-        - GITHUB_TOKEN
+        // - GITHUB_TOKEN
         // - KUBE_CONFIG  → kubeconfig del cluster
     }
 
