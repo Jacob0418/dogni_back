@@ -6,6 +6,7 @@ pipeline {
     }
 
     environment {
+        DOCKER_HOST = "tcp://host.docker.internal:2375"
         REGISTRY = "ghcr.io"
         REPO_OWNER = "jacob0418"
         REPO_NAME = "dogni_back"
