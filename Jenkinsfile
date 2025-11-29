@@ -78,25 +78,25 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
-            steps {
-                withCredentials([file(credentialsId: 'KUBE_CONFIG', variable: 'KUBECONFIG_FILE')]) {
-                    sh """
-                        mkdir -p \$HOME/.kube
-                        cp \$KUBECONFIG_FILE \$HOME/.kube/config
-                        chmod 600 \$HOME/.kube/config
-                    """
+        // stage('Deploy to Kubernetes') {
+        //     steps {
+        //         withCredentials([file(credentialsId: 'KUBE_CONFIG', variable: 'KUBECONFIG_FILE')]) {
+        //             sh """
+        //                 mkdir -p \$HOME/.kube
+        //                 cp \$KUBECONFIG_FILE \$HOME/.kube/config
+        //                 chmod 600 \$HOME/.kube/config
+        //             """
 
-                    sh """
-                        kubectl set image deployment/dogni-back dogni-back=${IMAGE} --namespace default || true
-                        kubectl apply -f k8s/ --namespace default
-                    """
+        //             sh """
+        //                 kubectl set image deployment/dogni-back dogni-back=${IMAGE} --namespace default || true
+        //                 kubectl apply -f k8s/ --namespace default
+        //             """
 
-                    sh """
-                        kubectl rollout status deployment/dogni-back --namespace default --timeout=2m
-                    """
-                }
-            }
-        }
+        //             sh """
+        //                 kubectl rollout status deployment/dogni-back --namespace default --timeout=2m
+        //             """
+        //         }
+        //     }
+        // }
     }
 }
